@@ -4,12 +4,17 @@ import { SourceNode } from 'source-map'
 const app = express()
 const port = 3000
 
+const sourceContent = `debugger;
+console.log('hello');`
 const sourceNode = new SourceNode(null, null, null, [
-    new SourceNode(2, 13, "raw.js", "Hallo", "Hello")
+    new SourceNode(1, 0, "raw.js", "debugger;\n"),
+    'console.log(\'',
+    new SourceNode(2, 14, "raw.js", "Hallo", "Hello"),
+    '\');'
 ])
-// sourceNode.setSourceContent("raw.js", 'console.log(\'hello\')');
-const {source, map} = sourceNode.toStringWithSourceMap({
-    file: "translated.txt"
+// sourceNode.setSourceContent("raw.js", sourceContent);
+const {code, map} = sourceNode.toStringWithSourceMap({
+    file: "index.js"
 })
 
 app.get('/', (req, res) => {
@@ -27,14 +32,17 @@ app.get('/', (req, res) => {
 })
 
 app.get('/index.js', (req, res) => {
-    res.send(`debugger;
-${source}
+    res.send(`${code}
 //# sourceMappingURL=index.js.map`)
 })
 
 app.get('/index.js.map', (req, res) => {
     console.log('index.js.map headers', req.headers)
     res.send(JSON.stringify(map, null, 2))
+})
+
+app.get('/raw.js', (req, res) => {
+    res.send(sourceContent)
 })
 
 app.get('*', (req, res) => {
